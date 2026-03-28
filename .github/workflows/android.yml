@@ -28,10 +28,7 @@ jobs:
         gradle-version: 8.6
 
     - name: Build Android Debug APK
-      working-directory: android
-      run: |
-        chmod +x gradlew
-        ./gradlew assembleDebug
+      run: gradle -p android assembleDebug
 
     - name: Extract Version
       id: extract_version
@@ -39,7 +36,7 @@ jobs:
         VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' android/app/build.gradle.kts)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-    - name: Deploy to GitHub Releases
+    - name: Deploy to GitHub Releases (Semantic)
       uses: softprops/action-gh-release@v2
       with:
         tag_name: "v${{ env.VERSION }}"
