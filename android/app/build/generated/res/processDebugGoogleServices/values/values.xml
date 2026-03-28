@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gcm_defaultSenderId" translatable="false">115338693669</string>
+    <string name="google_api_key" translatable="false">AIzaSyAPG8URg4h0AOT-RcJMKU_XohLQZ2AX-9g</string>
+    <string name="google_app_id" translatable="false">1:115338693669:android:f3ea5132377977001903cc</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAPG8URg4h0AOT-RcJMKU_XohLQZ2AX-9g</string>
+    <string name="google_storage_bucket" translatable="false">radiowave-7xxi7.firebasestorage.app</string>
+    <string name="project_id" translatable="false">radiowave-7xxi7</string>
+</resources>

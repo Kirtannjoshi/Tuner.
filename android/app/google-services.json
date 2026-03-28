@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "115338693669",
+    "project_id": "radiowave-7xxi7",
+    "storage_bucket": "radiowave-7xxi7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:115338693669:android:f3ea5132377977001903cc",
+        "android_client_info": {
+          "package_name": "com.tuner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPG8URg4h0AOT-RcJMKU_XohLQZ2AX-9g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
