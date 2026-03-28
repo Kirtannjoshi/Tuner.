@@ -450,7 +450,7 @@ export default function TunerApp() {
         <div style={{ marginTop: 'auto', paddingTop: 24, paddingLeft: 8, paddingRight: 8, borderTop: '1px solid var(--border-dim)' }}>
           {/* Android Download CTA */}
           <motion.a
-            href="https://github.com/Kirtannjoshi/Tuner/releases/download/latest/app-debug.apk"
+            href="https://github.com/Kirtannjoshi/Tuner/releases/latest/download/app-debug.apk"
             target="_blank"
             rel="noopener noreferrer"
             whileHover={{ scale: 1.03, boxShadow: '0 8px 24px rgba(236, 72, 153, 0.35)' }}
@@ -533,7 +533,7 @@ export default function TunerApp() {
               </button>
             </div>
             
-            <a href="https://github.com/Kirtannjoshi/Tuner/releases/download/latest/app-debug.apk" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+            <a href="https://github.com/Kirtannjoshi/Tuner/releases/latest/download/app-debug.apk" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
