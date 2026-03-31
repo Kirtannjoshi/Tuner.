@@ -22,8 +22,17 @@ class StationRepository @Inject constructor(
     private fun List<Station>.filterValid() =
         filter { !it.url_resolved.isNullOrEmpty() && !it.name.isNullOrEmpty() }
 
-    suspend fun getDiscoverStations(): List<Station> =
-        safeApiCall({ api.getTopStations().filterValid() }, emptyList())
+    suspend fun getDiscoverStations(countryCode: String? = null, language: String? = null): List<Station> {
+        if (countryCode.isNullOrBlank() && language.isNullOrBlank()) {
+            return safeApiCall({ api.getTopStations().filterValid() }, emptyList())
+        }
+        return safeApiCall({ 
+            api.advancedSearch(
+                countrycode = countryCode?.takeIf { it.isNotBlank() },
+                language = language?.takeIf { it.isNotBlank() }
+            ).filterValid() 
+        }, emptyList())
+    }
 
     suspend fun searchNetworks(query: String): List<Station> =
         safeApiCall({ api.searchStations(name = query).filterValid() }, emptyList())

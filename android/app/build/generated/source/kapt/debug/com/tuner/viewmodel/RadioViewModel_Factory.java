@@ -2,6 +2,7 @@
 package com.tuner.viewmodel;
 
 import android.content.Context;
+import com.tuner.api.GitHubApi;
 import com.tuner.repository.StationRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -22,25 +23,29 @@ import javax.inject.Provider;
 public final class RadioViewModel_Factory implements Factory<RadioViewModel> {
   private final Provider<StationRepository> repositoryProvider;
 
+  private final Provider<GitHubApi> gitHubApiProvider;
+
   private final Provider<Context> contextProvider;
 
   public RadioViewModel_Factory(Provider<StationRepository> repositoryProvider,
-      Provider<Context> contextProvider) {
+      Provider<GitHubApi> gitHubApiProvider, Provider<Context> contextProvider) {
     this.repositoryProvider = repositoryProvider;
+    this.gitHubApiProvider = gitHubApiProvider;
     this.contextProvider = contextProvider;
   }
 
   @Override
   public RadioViewModel get() {
-    return newInstance(repositoryProvider.get(), contextProvider.get());
+    return newInstance(repositoryProvider.get(), gitHubApiProvider.get(), contextProvider.get());
   }
 
   public static RadioViewModel_Factory create(Provider<StationRepository> repositoryProvider,
-      Provider<Context> contextProvider) {
-    return new RadioViewModel_Factory(repositoryProvider, contextProvider);
+      Provider<GitHubApi> gitHubApiProvider, Provider<Context> contextProvider) {
+    return new RadioViewModel_Factory(repositoryProvider, gitHubApiProvider, contextProvider);
   }
 
-  public static RadioViewModel newInstance(StationRepository repository, Context context) {
-    return new RadioViewModel(repository, context);
+  public static RadioViewModel newInstance(StationRepository repository, GitHubApi gitHubApi,
+      Context context) {
+    return new RadioViewModel(repository, gitHubApi, context);
   }
 }

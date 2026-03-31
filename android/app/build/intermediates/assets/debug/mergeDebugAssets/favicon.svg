@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="24 12 60 72">
+    <!-- Centered Pink Circle -->
+    <path fill="#EC4899" d="M 54,30 A 24,24 0 1 0 54,78 A 24,24 0 1 0 54,30 Z" />
+    
+    <!-- Outer Waves (Stroke 4) -->
+    <path stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" d="M42,54 Q34,42 34,34 Q34,26 42,18" />
+    <path stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" d="M66,54 Q74,42 74,34 Q74,26 66,18" />
+    
+    <!-- Inner Waves (Stroke 2.4) -->
+    <path stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" fill="none" d="M46,54 Q40,46 40,40 Q40,34 46,28" />
+    <path stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" fill="none" d="M62,54 Q68,46 68,40 Q68,34 62,28" />
+</svg>

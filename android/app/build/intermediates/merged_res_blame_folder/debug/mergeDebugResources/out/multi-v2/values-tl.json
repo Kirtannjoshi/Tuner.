@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.tuner.app-mergeDebugResources-68:/values-tl/values-tl.xml",
+            "outputFile": "com.tuner.app-mergeDebugResources-69:/values-tl/values-tl.xml",
             "map": [
                 {
                     "source": "C:\\Users\\KIRTAN JOSHI\\.gradle\\caches\\transforms-4\\b27cfdff2b8b8c2962860fcb25b66ded\\transformed\\jetified-foundation-release\\res\\values-tl\\values-tl.xml",

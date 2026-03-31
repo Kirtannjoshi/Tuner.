@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.tuner.app-mergeDebugResources-68:/values-ky/values-ky.xml",
+            "outputFile": "com.tuner.app-mergeDebugResources-69:/values-ky/values-ky.xml",
             "map": [
                 {
                     "source": "C:\\Users\\KIRTAN JOSHI\\.gradle\\caches\\transforms-4\\df2db684ba58e0c4e8f790e3f0961967\\transformed\\jetified-ui-release\\res\\values-ky\\values-ky.xml",

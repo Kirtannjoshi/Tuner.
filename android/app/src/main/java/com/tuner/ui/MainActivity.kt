@@ -24,9 +24,14 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import coil.Coil
+import coil.ImageLoader
+import coil.decode.SvgDecoder
 import com.tuner.ui.theme.TunerTheme
 import com.tuner.viewmodel.RadioViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -41,6 +49,7 @@ import dagger.hilt.android.AndroidEntryPoint
 sealed class Screen {
     object Home : Screen()
     object Library : Screen()
+    object Settings : Screen()
 }
 
 @AndroidEntryPoint
@@ -62,6 +71,13 @@ class MainActivity : ComponentActivity() {
         ) {
             notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+
+        val imageLoader = ImageLoader.Builder(this)
+            .components {
+                add(SvgDecoder.Factory())
+            }
+            .build()
+        Coil.setImageLoader(imageLoader)
 
         setContent {
             TunerTheme {
@@ -201,7 +217,12 @@ fun TunerApp(
                                 if (viewModel.selectStation(station)) {
                                     onPlayStation(station)
                                 }
-                            }
+                            },
+                            onNavigateSettings = { currentScreen = Screen.Settings }
+                        )
+                        is Screen.Settings -> SettingsScreen(
+                            viewModel = viewModel,
+                            onNavigateBack = { currentScreen = Screen.Home }
                         )
                         is Screen.Library -> LibraryScreen(
                             viewModel = viewModel,
@@ -224,14 +245,21 @@ fun TunerApp(
         modifier = Modifier.fillMaxSize()
     ) {
         currentStation?.let { station ->
+            val stationsList by viewModel.stations.collectAsState()
             FullScreenPlayer(
-                station = station,
+                stations = stationsList,
+                initialStationId = station.stationuuid,
                 isPlaying = isPlaying,
-                isFavorite = favorites.contains(station.stationuuid),
+                favorites = favorites,
                 audioOutput = audioOutput,
                 onPlayPause = { viewModel.togglePlayPause() },
-                onToggleFavorite = { viewModel.toggleFavorite(station.stationuuid) },
-                onMinimize = { isFullScreenPlayerOpen = false }
+                onToggleFavorite = { uuid -> viewModel.toggleFavorite(uuid) },
+                onMinimize = { isFullScreenPlayerOpen = false },
+                onStationSelected = { s -> 
+                    if (viewModel.selectStation(s)) {
+                        onPlayStation(s)
+                    }
+                }
             )
         }
     }

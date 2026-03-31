@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.tuner.model.Station
+import coil.imageLoader
+import androidx.core.graphics.drawable.toBitmap
 
 @Composable
 fun PlayerBar(
@@ -39,8 +41,32 @@ fun PlayerBar(
     onToggleFavorite: () -> Unit,
     onExpand: () -> Unit
 ) {
+    val defaultColor = Color(0xFF1E1E1E)
+    val dominantColor = remember(station.favicon) { mutableStateOf(defaultColor) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(station.favicon) {
+        if (station.favicon.isNullOrBlank()) return@LaunchedEffect
+        val req = coil.request.ImageRequest.Builder(context)
+            .data(station.favicon)
+            .allowHardware(false)
+            .size(coil.size.Size.ORIGINAL)
+            .build()
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val result = context.imageLoader.execute(req)
+            if (result is coil.request.SuccessResult) {
+                val bitmap = result.drawable.toBitmap()
+                androidx.palette.graphics.Palette.from(bitmap).generate { palette ->
+                    val clr = palette?.getDarkMutedColor(0xFF1E1E1E.toInt()) ?: 0xFF1E1E1E.toInt()
+                    dominantColor.value = Color(clr)
+                }
+            }
+        }
+    }
+    
+    val bgColor by androidx.compose.animation.animateColorAsState(targetValue = dominantColor.value, animationSpec = tween(500))
+
     Surface(
-        color = Color(0xFF1E1E1E), // Slightly lighter than standard dark to stand out from bottom bar
+        color = bgColor,
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
         shadowElevation = 8.dp,
         modifier = Modifier

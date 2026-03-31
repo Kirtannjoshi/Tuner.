@@ -35,9 +35,93 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.tuner.model.Station
+import androidx.palette.graphics.Palette
+import androidx.core.graphics.drawable.toBitmap
+import coil.imageLoader
+import kotlinx.coroutines.withContext
+import androidx.compose.animation.core.tween
 
 @Composable
+fun rememberDominantColor(imageUrl: String?): State<Color> {
+    val defaultColor = Color(0xFF121212)
+    val color = remember(imageUrl) { mutableStateOf(defaultColor) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    LaunchedEffect(imageUrl) {
+        if (imageUrl == null) return@LaunchedEffect
+        val request = coil.request.ImageRequest.Builder(context)
+            .data(imageUrl)
+            .allowHardware(false) // Necessary to get underlying pixels
+            .size(coil.size.Size.ORIGINAL) // Force high quality extraction
+            .build()
+        
+        // Execute request synchronously via io
+        withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val result = context.imageLoader.execute(request)
+            if (result is coil.request.SuccessResult) {
+                val bitmap = result.drawable.toBitmap()
+                Palette.from(bitmap).generate { palette ->
+                    val vibrant = palette?.getDarkVibrantColor(0xFF121212.toInt())
+                        ?: palette?.getMutedColor(0xFF121212.toInt())
+                        ?: 0xFF121212.toInt()
+                    color.value = Color(vibrant)
+                }
+            }
+        }
+    }
+    return color
+}
+
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
 fun FullScreenPlayer(
+    stations: List<Station>,
+    initialStationId: String,
+    isPlaying: Boolean,
+    favorites: Set<String>,
+    audioOutput: String = "SPEAKER",
+    onPlayPause: () -> Unit,
+    onToggleFavorite: (String) -> Unit,
+    onMinimize: () -> Unit,
+    onStationSelected: (Station) -> Unit
+) {
+    androidx.activity.compose.BackHandler { onMinimize() }
+
+    val initialIndex = remember { stations.indexOfFirst { it.stationuuid == initialStationId }.coerceAtLeast(0) }
+    val pagerState = androidx.compose.foundation.pager.rememberPagerState(
+        initialPage = initialIndex,
+        pageCount = { stations.size }
+    )
+
+    var lastPage by remember { mutableIntStateOf(initialIndex) }
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage != lastPage) {
+            lastPage = pagerState.currentPage
+            onStationSelected(stations[pagerState.currentPage])
+        }
+    }
+
+    androidx.compose.foundation.pager.VerticalPager(
+        state = pagerState,
+        modifier = Modifier.fillMaxSize()
+    ) { page ->
+        val pageStation = stations[page]
+        val isCurrentPlaying = (pagerState.currentPage == page) && isPlaying 
+        
+        PlayerPage(
+            station = pageStation,
+            isPlaying = isCurrentPlaying,
+            isFavorite = favorites.contains(pageStation.stationuuid),
+            audioOutput = audioOutput,
+            onPlayPause = onPlayPause,
+            onToggleFavorite = { onToggleFavorite(pageStation.stationuuid) },
+            onMinimize = onMinimize
+        )
+    }
+}
+
+@Composable
+fun PlayerPage(
     station: Station,
     isPlaying: Boolean,
     isFavorite: Boolean,
@@ -46,23 +130,27 @@ fun FullScreenPlayer(
     onToggleFavorite: () -> Unit,
     onMinimize: () -> Unit
 ) {
+    val dominantColor by rememberDominantColor(station.favicon)
+    val bgColor by androidx.compose.animation.animateColorAsState(targetValue = dominantColor, animationSpec = tween(700))
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212))
+            .background(bgColor)
     ) {
         // Blurred beautiful background
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
+        coil.compose.AsyncImage(
+            model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
                 .data(station.favicon)
                 .crossfade(true)
+                .size(coil.size.Size.ORIGINAL) // Ensures high quality thumbnail
                 .build(),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
                 .blur(80.dp)
-                .background(Color.Black.copy(alpha = 0.6f))
+                .background(Color.Black.copy(alpha = 0.5f))
         )
         
         // Overlay gradient for readability
@@ -105,19 +193,27 @@ fun FullScreenPlayer(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Giant Cover Art
+            // Giant Cover Art - Tomb Scrolling immersion
+            val artScale by animateFloatAsState(
+                targetValue = if (isPlaying) 1f else 0.85f,
+                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                label = "art_scale"
+            )
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(24.dp))
+                    .aspectRatio(0.8f) // Even taller to mimic Tiktok video aspect
+                    .scale(artScale)
+                    .clip(RoundedCornerShape(32.dp))
                     .background(Color(0xFF27272A)),
                 contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
+                coil.compose.AsyncImage(
+                    model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
                         .data(station.favicon)
                         .crossfade(true)
+                        .size(coil.size.Size.ORIGINAL) // Enforce High Quality
                         .build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,

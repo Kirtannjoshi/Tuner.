@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.tuner.api.GitHubApi
 import com.tuner.BuildConfig
 
@@ -25,10 +27,22 @@ class RadioViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
+    enum class UpdateStatus { IDLE, CHECKING, UP_TO_DATE, AVAILABLE, ERROR }
+
+    private val _updateStatus = MutableStateFlow(UpdateStatus.IDLE)
+    val updateStatus: StateFlow<UpdateStatus> = _updateStatus.asStateFlow()
+
     private val _updateAvailableUrl = MutableStateFlow<String?>(null)
     val updateAvailableUrl: StateFlow<String?> = _updateAvailableUrl.asStateFlow()
 
-    fun dismissUpdateDialog() { _updateAvailableUrl.value = null }
+    fun dismissUpdateDialog() { 
+        _updateAvailableUrl.value = null 
+        _updateStatus.value = UpdateStatus.IDLE
+    }
+    
+    fun notifyCheckForUpdatesManual() {
+        checkForUpdates(isManual = true)
+    }
 
     private val _stations = MutableStateFlow<List<Station>>(emptyList())
     val stations: StateFlow<List<Station>> = _stations.asStateFlow()
@@ -54,13 +68,78 @@ class RadioViewModel @Inject constructor(
     private val _audioOutput = MutableStateFlow("SPEAKER")
     val audioOutput: StateFlow<String> = _audioOutput.asStateFlow()
 
+    private val prefs = context.getSharedPreferences("tuner_prefs", Context.MODE_PRIVATE)
+    private val gson = Gson()
+    
+    private val _preferredCountry = MutableStateFlow(prefs.getStringSet("pref_countries", emptySet()) ?: emptySet())
+    val preferredCountry: StateFlow<Set<String>> = _preferredCountry.asStateFlow()
+    
+    private val _preferredLanguage = MutableStateFlow(prefs.getStringSet("pref_languages", emptySet()) ?: emptySet())
+    val preferredLanguage: StateFlow<Set<String>> = _preferredLanguage.asStateFlow()
+
+    private val _currentFeed = MutableStateFlow("GLOBAL")
+    val currentFeed: StateFlow<String> = _currentFeed.asStateFlow()
+
+    fun setPreferences(countryCode: String, language: String) {
+        val currentCountries = _preferredCountry.value.toMutableSet()
+        val currentLanguages = _preferredLanguage.value.toMutableSet()
+
+        if (countryCode.isNotBlank()) {
+            if (currentCountries.contains(countryCode)) {
+                currentCountries.remove(countryCode)
+            } else {
+                currentCountries.add(countryCode)
+            }
+        }
+        
+        if (language.isNotBlank()) {
+            if (currentLanguages.contains(language)) {
+                currentLanguages.remove(language)
+            } else {
+                currentLanguages.add(language)
+            }
+        }
+        
+        _preferredCountry.value = currentCountries
+        _preferredLanguage.value = currentLanguages
+        
+        prefs.edit()
+            .putStringSet("pref_countries", currentCountries)
+            .putStringSet("pref_languages", currentLanguages)
+            .apply()
+        
+        fetchDiscover()
+    }
+
+    fun setFeed(feed: String) {
+        _currentFeed.value = feed
+    }
+
     init {
+        RadioService.onNextRequested = { playNext() }
+        RadioService.onPrevRequested = { playPrev() }
         checkForUpdates()
         fetchDiscover()
         setupAudioRouting()
+        loadFavorites()
     }
 
-    private fun checkForUpdates() {
+    private fun loadFavorites() {
+        val json = prefs.getString("favorite_stations", null)
+        if (json != null) {
+            try {
+                val type = object : TypeToken<List<Station>>() {}.type
+                val savedList: List<Station> = gson.fromJson(json, type)
+                _favoriteStations.value = savedList
+                _favorites.value = savedList.map { it.stationuuid }.toSet()
+            } catch (e: Exception) {
+                // Ignore parsing errors
+            }
+        }
+    }
+
+    private fun checkForUpdates(isManual: Boolean = false) {
+        if (isManual) _updateStatus.value = UpdateStatus.CHECKING
         viewModelScope.launch {
             try {
                 val release = gitHubApi.getLatestRelease()
@@ -84,11 +163,16 @@ class RadioViewModel @Inject constructor(
                     }
                     
                     if (isNewer) {
+                        if (isManual) _updateStatus.value = UpdateStatus.AVAILABLE
                         _updateAvailableUrl.value = "https://github.com/Kirtannjoshi/Tuner/releases/latest/download/app-debug.apk"
+                    } else {
+                        if (isManual) _updateStatus.value = UpdateStatus.UP_TO_DATE
                     }
+                } else {
+                    if (isManual) _updateStatus.value = UpdateStatus.UP_TO_DATE
                 }
             } catch (e: Exception) {
-                // Ignore API failures gracefully
+                if (isManual) _updateStatus.value = UpdateStatus.ERROR
             }
         }
     }
@@ -133,8 +217,35 @@ class RadioViewModel @Inject constructor(
     fun fetchDiscover() {
         viewModelScope.launch {
             _isLoading.value = true
-            _stations.value = repository.getDiscoverStations()
+            val countries = _preferredCountry.value
+            val languages = _preferredLanguage.value
+            
+            val allStations = mutableListOf<Station>()
+            
+            if (countries.isEmpty() && languages.isEmpty()) {
+                allStations.addAll(repository.getDiscoverStations(null, null))
+            } else {
+                // Fetch for each country
+                countries.forEach { code ->
+                    allStations.addAll(repository.getDiscoverStations(code, null).take(10))
+                }
+                // Fetch for each language
+                languages.forEach { lang ->
+                    allStations.addAll(repository.getDiscoverStations(null, lang).take(10))
+                }
+                // Combined searches for country + language pairs if manageable
+                if (countries.isNotEmpty() && languages.isNotEmpty()) {
+                    countries.forEach { code ->
+                        languages.forEach { lang ->
+                            allStations.addAll(repository.getDiscoverStations(code, lang).take(5))
+                        }
+                    }
+                }
+            }
+            
+            _stations.value = allStations.distinctBy { it.stationuuid }.shuffled()
             _isLoading.value = false
+            _currentFeed.value = "GLOBAL"
         }
     }
 
@@ -209,5 +320,41 @@ class RadioViewModel @Inject constructor(
                 _favoriteStations.value = listOf(station) + _favoriteStations.value
             }
         }
+        saveFavorites()
+    }
+
+    private fun getActiveList(): List<Station> {
+        val curr = _currentStation.value ?: return emptyList()
+        val inStations = _stations.value.any { it.stationuuid == curr.stationuuid }
+        return if (inStations) _stations.value else _favoriteStations.value
+    }
+
+    fun playNext() {
+        val curr = _currentStation.value ?: return
+        val list = getActiveList()
+        if (list.isEmpty()) return
+        val idx = list.indexOfFirst { it.stationuuid == curr.stationuuid }
+        if (idx != -1) {
+            val nextS = list[(idx + 1) % list.size]
+            _currentStation.value = nextS
+            androidx.core.content.ContextCompat.startForegroundService(context, buildPlayIntent(nextS))
+        }
+    }
+
+    fun playPrev() {
+        val curr = _currentStation.value ?: return
+        val list = getActiveList()
+        if (list.isEmpty()) return
+        val idx = list.indexOfFirst { it.stationuuid == curr.stationuuid }
+        if (idx != -1) {
+            val prevIdx = if (idx - 1 < 0) list.size - 1 else idx - 1
+            val prevS = list[prevIdx]
+            _currentStation.value = prevS
+            androidx.core.content.ContextCompat.startForegroundService(context, buildPlayIntent(prevS))
+        }
+    }
+
+    private fun saveFavorites() {
+        prefs.edit().putString("favorite_stations", gson.toJson(_favoriteStations.value)).apply()
     }
 }

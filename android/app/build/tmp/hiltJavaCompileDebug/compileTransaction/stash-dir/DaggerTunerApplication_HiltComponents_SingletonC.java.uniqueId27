@@ -9,7 +9,9 @@ import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.ViewModel;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.tuner.api.GitHubApi;
 import com.tuner.api.RadioApi;
+import com.tuner.di.NetworkModule_ProvideGitHubApiFactory;
 import com.tuner.di.NetworkModule_ProvideRadioApiFactory;
 import com.tuner.di.NetworkModule_ProvideRetrofitFactory;
 import com.tuner.repository.StationRepository;
@@ -462,7 +464,7 @@ public final class DaggerTunerApplication_HiltComponents_SingletonC {
       public T get() {
         switch (id) {
           case 0: // com.tuner.viewmodel.RadioViewModel 
-          return (T) new RadioViewModel(singletonCImpl.stationRepositoryProvider.get(), ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
+          return (T) new RadioViewModel(singletonCImpl.stationRepositoryProvider.get(), singletonCImpl.provideGitHubApiProvider.get(), ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
           default: throw new AssertionError(id);
         }
@@ -550,6 +552,8 @@ public final class DaggerTunerApplication_HiltComponents_SingletonC {
 
     private Provider<StationRepository> stationRepositoryProvider;
 
+    private Provider<GitHubApi> provideGitHubApiProvider;
+
     private SingletonCImpl(ApplicationContextModule applicationContextModuleParam) {
       this.applicationContextModule = applicationContextModuleParam;
       initialize(applicationContextModuleParam);
@@ -561,6 +565,7 @@ public final class DaggerTunerApplication_HiltComponents_SingletonC {
       this.provideRetrofitProvider = DoubleCheck.provider(new SwitchingProvider<Retrofit>(singletonCImpl, 2));
       this.provideRadioApiProvider = DoubleCheck.provider(new SwitchingProvider<RadioApi>(singletonCImpl, 1));
       this.stationRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<StationRepository>(singletonCImpl, 0));
+      this.provideGitHubApiProvider = DoubleCheck.provider(new SwitchingProvider<GitHubApi>(singletonCImpl, 3));
     }
 
     @Override
@@ -604,6 +609,9 @@ public final class DaggerTunerApplication_HiltComponents_SingletonC {
 
           case 2: // retrofit2.Retrofit 
           return (T) NetworkModule_ProvideRetrofitFactory.provideRetrofit();
+
+          case 3: // com.tuner.api.GitHubApi 
+          return (T) NetworkModule_ProvideGitHubApiFactory.provideGitHubApi();
 
           default: throw new AssertionError(id);
         }

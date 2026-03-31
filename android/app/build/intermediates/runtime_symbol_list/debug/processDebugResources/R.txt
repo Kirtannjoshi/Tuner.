@@ -19,6 +19,7 @@ int attr bar_gravity 0x7f040009
 int attr bar_height 0x7f04000a
 int attr buffered_color 0x7f04000b
 int attr controller_layout_id 0x7f04000c
+int attr css 0x7f04005f
 int attr data 0x7f04000d
 int attr dataPattern 0x7f04000e
 int attr default_artwork 0x7f04000f
@@ -89,6 +90,7 @@ int attr splashScreenIconSize 0x7f04004f
 int attr stackFromEnd 0x7f040050
 int attr startDestination 0x7f040051
 int attr surface_type 0x7f040052
+int attr svg 0x7f040060
 int attr targetPackage 0x7f040053
 int attr time_bar_min_update_interval 0x7f040054
 int attr touch_target_height 0x7f040055
@@ -280,6 +282,7 @@ int drawable ic_call_answer_video 0x7f070054
 int drawable ic_call_answer_video_low 0x7f070055
 int drawable ic_call_decline 0x7f070056
 int drawable ic_call_decline_low 0x7f070057
+int drawable ic_launcher_background 0x7f070073
 int drawable ic_launcher_foreground 0x7f070058
 int drawable ic_notification 0x7f070059
 int drawable ic_pause 0x7f07005a
@@ -948,6 +951,9 @@ int styleable RecyclerView_layoutManager 8
 int styleable RecyclerView_reverseLayout 9
 int styleable RecyclerView_spanCount 10
 int styleable RecyclerView_stackFromEnd 11
+int[] styleable SVGImageView { 0x7f04005f, 0x7f040060 }
+int styleable SVGImageView_css 0
+int styleable SVGImageView_svg 1
 int[] styleable StateListDrawable { 0x0101011c, 0x01010194, 0x01010195, 0x01010196, 0x0101030c, 0x0101030d }
 int styleable StateListDrawable_android_dither 0
 int styleable StateListDrawable_android_visible 1

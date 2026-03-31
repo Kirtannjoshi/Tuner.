@@ -1,19 +1,30 @@
-<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     
-    <!-- Centered Pink Circle -->
-    <path android:fillColor="#EC4899" android:pathData="M 54,30 A 24,24 0 1 0 54,78 A 24,24 0 1 0 54,30 Z" />
-    
-    <!-- Outer Waves (Stroke 4) -->
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="4" android:strokeLineCap="round" android:pathData="M42,54 Q34,42 34,34 Q34,26 42,18" />
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="4" android:strokeLineCap="round" android:pathData="M66,54 Q74,42 74,34 Q74,26 66,18" />
-    
-    <!-- Inner Waves (Stroke 2.4) -->
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="2.4" android:strokeLineCap="round" android:pathData="M46,54 Q40,46 40,40 Q40,34 46,28" />
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="2.4" android:strokeLineCap="round" android:pathData="M62,54 Q68,46 68,40 Q68,34 62,28" />
-    
+    <path
+        android:fillColor="#EC4899"
+        android:pathData="M 54,30 A 24,24 0 1 0 54,78 A 24,24 0 1 0 54,30 Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M42,54 Q34,42 34,34 Q34,26 42,18" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M66,54 Q74,42 74,34 Q74,26 66,18" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.4"
+        android:strokeLineCap="round"
+        android:pathData="M46,54 Q40,46 40,40 Q40,34 46,28" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.4"
+        android:strokeLineCap="round"
+        android:pathData="M62,54 Q68,46 68,40 Q68,34 62,28" />
 </vector>

@@ -80,6 +80,10 @@ dependencies {
     
     // Coil
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.coil-kt:coil-svg:2.6.0")
+    
+    // Palette
+    implementation("androidx.palette:palette-ktx:1.0.0")
     
     // Hilt
     implementation("com.google.dagger:hilt-android:2.51")

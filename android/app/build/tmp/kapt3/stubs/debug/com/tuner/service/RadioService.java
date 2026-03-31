@@ -11,6 +11,16 @@ public final class RadioService extends android.app.Service {
     @org.jetbrains.annotations.NotNull()
     public static final java.lang.String ACTION_TOGGLE = "com.tuner.ACTION_TOGGLE";
     @org.jetbrains.annotations.NotNull()
+    public static final java.lang.String ACTION_STOP = "com.tuner.ACTION_STOP";
+    @org.jetbrains.annotations.NotNull()
+    public static final java.lang.String ACTION_NEXT = "com.tuner.ACTION_NEXT";
+    @org.jetbrains.annotations.NotNull()
+    public static final java.lang.String ACTION_PREV = "com.tuner.ACTION_PREV";
+    @org.jetbrains.annotations.Nullable()
+    private static kotlin.jvm.functions.Function0<kotlin.Unit> onNextRequested;
+    @org.jetbrains.annotations.Nullable()
+    private static kotlin.jvm.functions.Function0<kotlin.Unit> onPrevRequested;
+    @org.jetbrains.annotations.NotNull()
     private static final kotlinx.coroutines.flow.MutableStateFlow<java.lang.Boolean> _isPlaying = null;
     @org.jetbrains.annotations.NotNull()
     private static final kotlinx.coroutines.flow.StateFlow<java.lang.Boolean> isPlaying = null;
@@ -76,11 +86,29 @@ public final class RadioService extends android.app.Service {
     public void onDestroy() {
     }
     
-    @kotlin.Metadata(mv = {1, 9, 0}, k = 1, xi = 48, d1 = {"\u0000(\n\u0002\u0018\u0002\n\u0002\u0010\u0000\n\u0002\b\u0002\n\u0002\u0010\u000e\n\u0002\b\u0004\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\u000b\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0004\b\u0086\u0003\u0018\u00002\u00020\u0001B\u0007\b\u0002\u00a2\u0006\u0002\u0010\u0002R\u000e\u0010\u0003\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u000e\u0010\u0005\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u000e\u0010\u0006\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u000e\u0010\u0007\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u0016\u0010\b\u001a\n\u0012\u0006\u0012\u0004\u0018\u00010\u00040\tX\u0082\u0004\u00a2\u0006\u0002\n\u0000R\u0014\u0010\n\u001a\b\u0012\u0004\u0012\u00020\u000b0\tX\u0082\u0004\u00a2\u0006\u0002\n\u0000R\u0019\u0010\f\u001a\n\u0012\u0006\u0012\u0004\u0018\u00010\u00040\r\u00a2\u0006\b\n\u0000\u001a\u0004\b\u000e\u0010\u000fR\u0017\u0010\u0010\u001a\b\u0012\u0004\u0012\u00020\u000b0\r\u00a2\u0006\b\n\u0000\u001a\u0004\b\u0010\u0010\u000f\u00a8\u0006\u0011"}, d2 = {"Lcom/tuner/service/RadioService$Companion;", "", "()V", "ACTION_PLAY", "", "ACTION_TOGGLE", "EXTRA_STATION_NAME", "EXTRA_STREAM_URL", "_error", "Lkotlinx/coroutines/flow/MutableStateFlow;", "_isPlaying", "", "error", "Lkotlinx/coroutines/flow/StateFlow;", "getError", "()Lkotlinx/coroutines/flow/StateFlow;", "isPlaying", "app_debug"})
+    @kotlin.Metadata(mv = {1, 9, 0}, k = 1, xi = 48, d1 = {"\u00004\n\u0002\u0018\u0002\n\u0002\u0010\u0000\n\u0002\b\u0002\n\u0002\u0010\u000e\n\u0002\b\u0007\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\u000b\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0004\n\u0002\u0018\u0002\n\u0002\u0010\u0002\n\u0002\b\b\b\u0086\u0003\u0018\u00002\u00020\u0001B\u0007\b\u0002\u00a2\u0006\u0002\u0010\u0002R\u000e\u0010\u0003\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u000e\u0010\u0005\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u000e\u0010\u0006\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u000e\u0010\u0007\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u000e\u0010\b\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u000e\u0010\t\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u000e\u0010\n\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000R\u0016\u0010\u000b\u001a\n\u0012\u0006\u0012\u0004\u0018\u00010\u00040\fX\u0082\u0004\u00a2\u0006\u0002\n\u0000R\u0014\u0010\r\u001a\b\u0012\u0004\u0012\u00020\u000e0\fX\u0082\u0004\u00a2\u0006\u0002\n\u0000R\u0019\u0010\u000f\u001a\n\u0012\u0006\u0012\u0004\u0018\u00010\u00040\u0010\u00a2\u0006\b\n\u0000\u001a\u0004\b\u0011\u0010\u0012R\u0017\u0010\u0013\u001a\b\u0012\u0004\u0012\u00020\u000e0\u0010\u00a2\u0006\b\n\u0000\u001a\u0004\b\u0013\u0010\u0012R\"\u0010\u0014\u001a\n\u0012\u0004\u0012\u00020\u0016\u0018\u00010\u0015X\u0086\u000e\u00a2\u0006\u000e\n\u0000\u001a\u0004\b\u0017\u0010\u0018\"\u0004\b\u0019\u0010\u001aR\"\u0010\u001b\u001a\n\u0012\u0004\u0012\u00020\u0016\u0018\u00010\u0015X\u0086\u000e\u00a2\u0006\u000e\n\u0000\u001a\u0004\b\u001c\u0010\u0018\"\u0004\b\u001d\u0010\u001a\u00a8\u0006\u001e"}, d2 = {"Lcom/tuner/service/RadioService$Companion;", "", "()V", "ACTION_NEXT", "", "ACTION_PLAY", "ACTION_PREV", "ACTION_STOP", "ACTION_TOGGLE", "EXTRA_STATION_NAME", "EXTRA_STREAM_URL", "_error", "Lkotlinx/coroutines/flow/MutableStateFlow;", "_isPlaying", "", "error", "Lkotlinx/coroutines/flow/StateFlow;", "getError", "()Lkotlinx/coroutines/flow/StateFlow;", "isPlaying", "onNextRequested", "Lkotlin/Function0;", "", "getOnNextRequested", "()Lkotlin/jvm/functions/Function0;", "setOnNextRequested", "(Lkotlin/jvm/functions/Function0;)V", "onPrevRequested", "getOnPrevRequested", "setOnPrevRequested", "app_debug"})
     public static final class Companion {
         
         private Companion() {
             super();
+        }
+        
+        @org.jetbrains.annotations.Nullable()
+        public final kotlin.jvm.functions.Function0<kotlin.Unit> getOnNextRequested() {
+            return null;
+        }
+        
+        public final void setOnNextRequested(@org.jetbrains.annotations.Nullable()
+        kotlin.jvm.functions.Function0<kotlin.Unit> p0) {
+        }
+        
+        @org.jetbrains.annotations.Nullable()
+        public final kotlin.jvm.functions.Function0<kotlin.Unit> getOnPrevRequested() {
+            return null;
+        }
+        
+        public final void setOnPrevRequested(@org.jetbrains.annotations.Nullable()
+        kotlin.jvm.functions.Function0<kotlin.Unit> p0) {
         }
         
         @org.jetbrains.annotations.NotNull()

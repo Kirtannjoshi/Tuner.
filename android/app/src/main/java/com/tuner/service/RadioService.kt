@@ -23,6 +23,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import coil.imageLoader
 import coil.request.ImageRequest
 import android.graphics.Bitmap
@@ -47,6 +48,12 @@ class RadioService : Service() {
         const val EXTRA_STATION_NAME = "station_name"
         const val ACTION_PLAY = "com.tuner.ACTION_PLAY"
         const val ACTION_TOGGLE = "com.tuner.ACTION_TOGGLE"
+        const val ACTION_STOP = "com.tuner.ACTION_STOP"
+        const val ACTION_NEXT = "com.tuner.ACTION_NEXT"
+        const val ACTION_PREV = "com.tuner.ACTION_PREV"
+        
+        var onNextRequested: (() -> Unit)? = null
+        var onPrevRequested: (() -> Unit)? = null
 
         // UI observes this — no binding needed
         private val _isPlaying = MutableStateFlow(false)
@@ -108,12 +115,20 @@ class RadioService : Service() {
         val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
             .setBufferDurationsMs(3_000, 50_000, 250, 1_500)
             .build()
+            
+        // Low Data Mode: limit audio bitrate if stream supports adaptive bitrate
+        val trackSelector = DefaultTrackSelector(this).apply {
+            setParameters(
+                buildUponParameters().setMaxAudioBitrate(64000)
+            )
+        }
 
         player = ExoPlayer.Builder(this)
             .setAudioAttributes(audioAttributes, true)
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(androidx.media3.common.C.WAKE_MODE_NETWORK)
             .setLoadControl(loadControl)
+            .setTrackSelector(trackSelector)
             .build()
             .also { it.addListener(playerListener) }
 
@@ -122,6 +137,8 @@ class RadioService : Service() {
                 override fun onPlay() { player.play() }
                 override fun onPause() { player.pause() }
                 override fun onStop() { player.stop() }
+                override fun onSkipToNext() { onNextRequested?.invoke() }
+                override fun onSkipToPrevious() { onPrevRequested?.invoke() }
             })
             isActive = true
         }
@@ -149,6 +166,17 @@ class RadioService : Service() {
             }
             ACTION_TOGGLE -> {
                 if (player.isPlaying) player.pause() else requestFocusAndPlay()
+            }
+            ACTION_NEXT -> onNextRequested?.invoke()
+            ACTION_PREV -> onPrevRequested?.invoke()
+            ACTION_STOP -> {
+                player.stop()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                } else {
+                    stopForeground(true)
+                }
+                stopSelf()
             }
         }
         return START_STICKY
@@ -228,6 +256,10 @@ class RadioService : Service() {
             name == "Tuner" -> "Tap a station to play"
             else -> "Paused — $name"
         }
+        
+        val nextPi = PendingIntent.getService(this, 3, Intent(this, RadioService::class.java).apply { action = ACTION_NEXT }, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val prevPi = PendingIntent.getService(this, 4, Intent(this, RadioService::class.java).apply { action = ACTION_PREV }, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Tuner")
             .setContentText(subtitle)
@@ -239,17 +271,26 @@ class RadioService : Service() {
             .setSilent(true)
             .apply {
                 if (name != "Tuner") {
+                    addAction(android.R.drawable.ic_media_previous, "Previous", prevPi)
                     addAction(
                         if (playing) R.drawable.ic_pause else R.drawable.ic_play,
                         if (playing) "Pause" else "Play",
                         togglePi
                     )
+                    addAction(android.R.drawable.ic_media_next, "Next", nextPi)
+                    
+                    val stopPi = PendingIntent.getService(
+                        this@RadioService, 2,
+                        Intent(this@RadioService, RadioService::class.java).apply { action = ACTION_STOP },
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+                    addAction(android.R.drawable.ic_menu_close_clear_cancel, "Close", stopPi)
                 }
             }
             .setStyle(
                 MediaStyle()
                     .setMediaSession(mediaSession.sessionToken)
-                    .also { if (name != "Tuner") it.setShowActionsInCompactView(0) }
+                    .also { if (name != "Tuner") it.setShowActionsInCompactView(0, 1, 2) }
             )
             .build()
     }
