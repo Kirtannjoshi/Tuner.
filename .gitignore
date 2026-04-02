@@ -1,0 +1,31 @@
+# Root GitIgnore for Tuner Project
+
+# Android specific
+android/.gradle/
+android/build/
+android/app/build/
+android/*/build/
+android/local.properties
+android/*.apk
+android/*.apks
+android/*.aab
+
+# Node specific
+web/node_modules/
+web/dist/
+web/.firebase/
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+
+# IDE specific
+.idea/
+.vscode/
+*.iml
+.DS_Store
+*.swp
+*.bak
+*~
+
+# Logs
+*.log
