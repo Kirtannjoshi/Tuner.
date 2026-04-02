@@ -9,11 +9,15 @@ android/local.properties
 android/*.apk
 android/*.apks
 android/*.aab
+android/*.json
 
 # Node specific
 web/node_modules/
 web/dist/
 web/.firebase/
+web/*.json
+*-adminsdk-*.json
+secrets/
 web/npm-debug.log*
 web/yarn-debug.log*
 web/yarn-error.log*
