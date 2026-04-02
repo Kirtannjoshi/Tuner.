@@ -94,8 +94,20 @@ fun HomeScreen(viewModel: RadioViewModel, onPlayStation: (Station) -> Unit, onNa
                     )
                 },
                 actions = {
+                    val hasUpdate by viewModel.hasUpdateBadge.collectAsState()
                     IconButton(onClick = onNavigateSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White, modifier = Modifier.size(24.dp))
+                        Box {
+                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White, modifier = Modifier.size(24.dp))
+                            if (hasUpdate) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .align(Alignment.TopEnd)
+                                        .background(Color(0xFFEC4899), CircleShape)
+                                        .border(1.5.dp, Color(0xFF121212), CircleShape)
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF121212))

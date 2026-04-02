@@ -35,6 +35,9 @@ class RadioViewModel @Inject constructor(
     private val _updateAvailableUrl = MutableStateFlow<String?>(null)
     val updateAvailableUrl: StateFlow<String?> = _updateAvailableUrl.asStateFlow()
 
+    private val _hasUpdateBadge = MutableStateFlow(false)
+    val hasUpdateBadge: StateFlow<Boolean> = _hasUpdateBadge.asStateFlow()
+
     fun dismissUpdateDialog() { 
         _updateAvailableUrl.value = null 
         _updateStatus.value = UpdateStatus.IDLE
@@ -186,8 +189,8 @@ class RadioViewModel @Inject constructor(
                 val currentVersion = BuildConfig.VERSION_NAME
                 
                 if (latestVersion != currentVersion) {
-                    val latestParts = latestVersion.split(".").map { it.toIntOrNull() ?: 0 }
-                    val currentParts = currentVersion.split(".").map { it.toIntOrNull() ?: 0 }
+                    val latestParts = latestVersion.split(".").mapNotNull { it.toIntOrNull() }
+                    val currentParts = currentVersion.split(".").mapNotNull { it.toIntOrNull() }
                     
                     var isNewer = false
                     for (i in 0 until maxOf(latestParts.size, currentParts.size)) {
@@ -203,12 +206,15 @@ class RadioViewModel @Inject constructor(
                     
                     if (isNewer) {
                         if (isManual) _updateStatus.value = UpdateStatus.AVAILABLE
+                        _hasUpdateBadge.value = true
                         _updateAvailableUrl.value = "https://github.com/Kirtannjoshi/Tuner./releases/latest/download/app-debug.apk"
                     } else {
                         if (isManual) _updateStatus.value = UpdateStatus.UP_TO_DATE
+                        _hasUpdateBadge.value = false
                     }
                 } else {
                     if (isManual) _updateStatus.value = UpdateStatus.UP_TO_DATE
+                    _hasUpdateBadge.value = false
                 }
             } catch (e: Exception) {
                 if (isManual) _updateStatus.value = UpdateStatus.ERROR
@@ -262,7 +268,9 @@ class RadioViewModel @Inject constructor(
             val allStations = mutableListOf<Station>()
             
             if (countries.isEmpty() && languages.isEmpty()) {
+                // FETCH GLOBAL TRENDS if no filters set
                 allStations.addAll(repository.getDiscoverStations(null, null))
+                allStations.addAll(repository.searchNetworks("trending"))
             } else {
                 // Fetch for each country
                 countries.forEach { code ->

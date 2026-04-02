@@ -114,7 +114,7 @@ class RadioService : Service() {
         // - bufferForPlaybackMs: 250 (starts audio instantly after capturing just 0.25s of data)
         // - maxBufferMs: 50000 (maintains deep reservoir to prevent chopping)
         val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
-            .setBufferDurationsMs(3_000, 50_000, 250, 1_500)
+            .setBufferDurationsMs(2_500, 40_000, 100, 500)
             .build()
             
         // Low Data Mode: limit audio bitrate if stream supports adaptive bitrate

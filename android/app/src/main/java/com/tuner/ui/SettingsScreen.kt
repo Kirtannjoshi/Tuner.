@@ -255,11 +255,18 @@ fun SettingsScreen(viewModel: RadioViewModel, onNavigateBack: () -> Unit) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Contact Support", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            val hasUpdate by viewModel.hasUpdateBadge.collectAsState()
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Contact Support", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                if (hasUpdate) {
+                                    Spacer(Modifier.width(8.dp))
+                                    Box(modifier = Modifier.size(6.dp).background(Color(0xFFEC4899), CircleShape))
+                                }
+                            }
                             Text("Email ID coming soon", color = Color(0xFF71717A), fontSize = 12.sp)
                         }
                         Text(
-                            text = "V1.2 BETA", 
+                            text = "V${com.tuner.BuildConfig.VERSION_NAME} BETA", 
                             color = Color(0xFF52525B), 
                             fontSize = 12.sp, 
                             fontWeight = FontWeight.Bold,

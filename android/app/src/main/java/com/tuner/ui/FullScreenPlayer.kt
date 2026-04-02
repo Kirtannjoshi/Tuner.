@@ -15,12 +15,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -114,7 +109,10 @@ fun FullScreenPlayer(
 
     androidx.compose.foundation.pager.VerticalPager(
         state = pagerState,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().graphicsLayer { 
+            // Simple hardware acceleration hint for smoother vertical paging
+            clip = true
+        }
     ) { page ->
         val pageStation = stations[page]
         val isCurrentPlaying = (pagerState.currentPage == page) && isPlaying 
@@ -295,6 +293,21 @@ fun PlayerPage(
                     }
                 }
                 
+                var showInfo by remember { mutableStateOf(false) }
+                
+                IconButton(onClick = { showInfo = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Station Info",
+                        tint = Color.White.copy(alpha = 0.6f),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                if (showInfo) {
+                    StationDetailSheet(station = station, onDismiss = { showInfo = false })
+                }
+
                 val heartScale by animateFloatAsState(
                     targetValue = if (isFavorite) 1.25f else 1f,
                     animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
@@ -377,6 +390,7 @@ fun PlayerPage(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(80.dp)
+                            .aspectRatio(1f)
                             .scale(playScale)
                             .clip(CircleShape)
                             .background(Color(0xFFEC4899))
@@ -425,6 +439,79 @@ fun PlayerPage(
             }
             
             Spacer(modifier = Modifier.height(48.dp))
+       @OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StationDetailSheet(station: Station, onDismiss: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF18181B),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha=0.2f)) },
+        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .navigationBarsPadding()
+        ) {
+            Text(
+                station.name,
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = station.tags?.replace(",", " • ")?.uppercase() ?: "LIVE RADIO",
+                color = Color(0xFFEC4899),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(Modifier.height(24.dp))
+            
+            // Stats Row
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                InfoChip(label = "Quality", value = "${station.bitrate ?: 128} kbps")
+                InfoChip(label = "Format", value = station.codec ?: "MP3")
+                InfoChip(label = "Votes", value = station.votes?.toString() ?: "New")
+            }
+            
+            Spacer(Modifier.height(24.dp))
+            
+            Text(
+                "About this station",
+                color = Color.White.copy(alpha=0.6f),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Discover the unique sounds of ${station.name}. Streaming live from ${station.country ?: "the world"}, this station offers a high-fidelity experience in ${station.language ?: "the local native language"}. Official source and catalogs are synced via RadioBrowser.com",
+                color = Color.White.copy(alpha=0.8f),
+                fontSize = 14.sp,
+                lineHeight = 20.sp
+            )
+            
+            Spacer(Modifier.height(32.dp))
+            
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27272A))
+            ) {
+                Text("Close Details", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(16.dp))
         }
+    }
+}
+
+@Composable
+fun InfoChip(label: String, value: String) {
+    Column {
+        Text(label, color = Color.White.copy(alpha=0.4f), fontSize = 11.sp)
+        Text(value, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
 }

@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:115338693669:android:f3ea5132377977001903cc",
         "android_client_info": {
-          "package_name": "tuner.app"
+          "package_name": "com.tuner"
         }
       },
       "oauth_client": [],
