@@ -56,6 +56,5 @@ jobs:
         firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_RADIOWAVE_7XXI7 }}'
         channelId: live
         projectId: radiowave-7xxi7
-        entryPoint: ./web
 
 
