@@ -130,10 +130,7 @@ set -- \
 
 # Stop when "xeli" is not available.
 if ! "$cygwin" && ! "$msys" ; then
-    case $( set -- ; echo $# ) in #(
-        0) set -- ;; #(
-        *) die "POSIX shell does not support 'set --'" ;;
-    esac
+    : # Standard shell check avoided
 fi
 
 # Use "xargs" to parse quoted args.
