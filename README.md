@@ -32,21 +32,7 @@ Developed as a flagship project for **Dev.For.Me**, Tuner leverages hardware-awa
 
 ---
 
-## 🚀 Professional CI/CD & Hosting
-Tuner utilizes a "Professional Direct Hosting" path, ensuring that your installation experience is as smooth as a native app store broadcast.
 
-> [!IMPORTANT]
-> **No Redirects, No Ugly UI**: Unlike standard open-source projects that rely on clunky GitHub release pages, Tuner's CI/CD pipeline automatically mirrors the latest successful Android build directly to our production CDN.
-> 
-> When you click download, the file is served directly from our domain (**`radiowave-7xxi7.web.app`**) with a single tap.
-
-### Automated Pipeline Flow:
-1. **Build**: GitHub Actions compiles the Android binary and extracts the version number.
-2. **Tag**: A new semantic release is created on GitHub for archival.
-3. **Mirror**: The binary is automatically injected into the Web project's `public/download` directory.
-4. **Deploy**: Firebase Hosting deploys the new website and the APK together, ensuring they are always in perfect sync.
-
----
 
 ## 📦 Getting Started
 
