@@ -46,8 +46,9 @@ jobs:
 
     - name: Prepare APK for Direct Hosting
       run: |
-        mkdir -p web/public/download
-        cp android/app/build/outputs/apk/debug/app-debug.apk web/public/download/tuner.apk
+        mkdir -p web/dist/download
+        cp android/app/build/outputs/apk/debug/app-debug.apk web/dist/download/tuner.apk
+        echo "<html><body><h1>Tuner APK Mirror</h1><p>Download the latest APK <a href='/download/tuner.apk'>here</a>.</p></body></html>" > web/dist/index.html
 
     - name: Mirror APK to Firebase Hosting (Direct Download)
       uses: FirebaseExtended/action-hosting-deploy@v0
