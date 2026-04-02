@@ -118,37 +118,82 @@ fun SettingsScreen(viewModel: RadioViewModel, onNavigateBack: () -> Unit) {
             }
 
             // --- UPDATE STATUS ---
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text("Application Status", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFA1A1AA))
-                Button(
-                    onClick = { viewModel.notifyCheckForUpdatesManual() },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27272A)),
-                    enabled = updateStatus != RadioViewModel.UpdateStatus.CHECKING
+                
+                val lastChecked by viewModel.lastCheckedTimestamp.collectAsState()
+                
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = Color(0xFF1E1E22),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    when (updateStatus) {
-                        RadioViewModel.UpdateStatus.IDLE -> Text("Check for Application Updates", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        RadioViewModel.UpdateStatus.CHECKING -> {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                            Spacer(Modifier.width(12.dp))
-                            Text("Checking GitHub...", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("Check for Updates", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                lastChecked?.let {
+                                    Text(it, color = Color(0xFF71717A), fontSize = 12.sp)
+                                }
+                            }
+                            
+                            if (updateStatus == RadioViewModel.UpdateStatus.CHECKING) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color(0xFF9146FF), strokeWidth = 2.dp)
+                            } else {
+                                TextButton(onClick = { viewModel.notifyCheckForUpdatesManual() }) {
+                                    Text("CHECK NOW", color = Color(0xFF9146FF), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                            }
                         }
-                        RadioViewModel.UpdateStatus.UP_TO_DATE -> Text("App is up to date! 🎉", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        RadioViewModel.UpdateStatus.AVAILABLE -> Text("New Version Available", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        RadioViewModel.UpdateStatus.ERROR -> Text("Check Failed", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
 
-                if (updateStatus == RadioViewModel.UpdateStatus.AVAILABLE && updateUrl != null) {
-                    val context = androidx.compose.ui.platform.LocalContext.current
-                    Button(
-                        onClick = { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(updateUrl))) },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC4899))
-                    ) {
-                        Text("Download Update", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        if (updateStatus == RadioViewModel.UpdateStatus.AVAILABLE && updateUrl != null) {
+                            Spacer(Modifier.height(20.dp))
+                            
+                            // Important explanation for the user
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF9146FF).copy(alpha = 0.1f),
+                                border = BorderStroke(1.dp, Color(0xFF9146FF).copy(alpha = 0.2f))
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        "Software Update Available", 
+                                        color = Color.White, 
+                                        fontWeight = FontWeight.Bold, 
+                                        fontSize = 14.sp
+                                    )
+                                    Text(
+                                        "Installing the update will automatically replace the current version. Your favorites and settings will remain safe.",
+                                        color = Color(0xFFA1A1AA),
+                                        fontSize = 12.sp,
+                                        lineHeight = 16.sp,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(16.dp))
+
+                            val context = androidx.compose.ui.platform.LocalContext.current
+                            Button(
+                                onClick = { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(updateUrl))) },
+                                modifier = Modifier.fillMaxWidth().height(52.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC4899))
+                            ) {
+                                Text("Download & Install Update", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            }
+                        } else if (updateStatus == RadioViewModel.UpdateStatus.UP_TO_DATE) {
+                            Spacer(Modifier.height(12.dp))
+                            Text("🎉 You are using the latest version of Tuner.", color = Color(0xFF22C55E), fontSize = 13.sp)
+                        } else if (updateStatus == RadioViewModel.UpdateStatus.ERROR) {
+                            Spacer(Modifier.height(12.dp))
+                            Text("Unable to reach GitHub. Please check your connection.", color = Color(0xFFEF4444), fontSize = 13.sp)
+                        }
                     }
                 }
             }

@@ -38,6 +38,9 @@ class RadioViewModel @Inject constructor(
     private val _hasUpdateBadge = MutableStateFlow(false)
     val hasUpdateBadge: StateFlow<Boolean> = _hasUpdateBadge.asStateFlow()
 
+    private val _lastCheckedTimestamp = MutableStateFlow<String?>(null)
+    val lastCheckedTimestamp: StateFlow<String?> = _lastCheckedTimestamp.asStateFlow()
+
     fun dismissUpdateDialog() { 
         _updateAvailableUrl.value = null 
         _updateStatus.value = UpdateStatus.IDLE
@@ -188,6 +191,12 @@ class RadioViewModel @Inject constructor(
                 val latestVersion = release.tag_name.replace("v", "")
                 val currentVersion = BuildConfig.VERSION_NAME
                 
+                // Update timestamp on manual check
+                if (isManual) {
+                    val sdf = java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault())
+                    _lastCheckedTimestamp.value = "Last checked: ${sdf.format(java.util.Date())}"
+                }
+
                 if (latestVersion != currentVersion) {
                     val latestParts = latestVersion.split(".").mapNotNull { it.toIntOrNull() }
                     val currentParts = currentVersion.split(".").mapNotNull { it.toIntOrNull() }
@@ -205,15 +214,15 @@ class RadioViewModel @Inject constructor(
                     }
                     
                     if (isNewer) {
-                        if (isManual) _updateStatus.value = UpdateStatus.AVAILABLE
+                        _updateStatus.value = UpdateStatus.AVAILABLE
                         _hasUpdateBadge.value = true
                         _updateAvailableUrl.value = "https://github.com/Kirtannjoshi/Tuner./releases/latest/download/app-debug.apk"
                     } else {
-                        if (isManual) _updateStatus.value = UpdateStatus.UP_TO_DATE
+                        _updateStatus.value = UpdateStatus.UP_TO_DATE
                         _hasUpdateBadge.value = false
                     }
                 } else {
-                    if (isManual) _updateStatus.value = UpdateStatus.UP_TO_DATE
+                    _updateStatus.value = UpdateStatus.UP_TO_DATE
                     _hasUpdateBadge.value = false
                 }
             } catch (e: Exception) {
