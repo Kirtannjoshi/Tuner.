@@ -205,8 +205,10 @@ fun TunerApp(
             AnimatedContent(
                 targetState = currentScreen,
                 transitionSpec = {
-                    (fadeIn(tween(250)) + scaleIn(tween(250), initialScale = 0.97f))
-                        .togetherWith(fadeOut(tween(200)) + scaleOut(tween(200), targetScale = 1.03f))
+                    (fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow, dampingRatio = Spring.DampingRatioLowBouncy)) + 
+                     scaleIn(initialScale = 0.92f, animationSpec = spring(stiffness = Spring.StiffnessLow, dampingRatio = Spring.DampingRatioLowBouncy)))
+                        .togetherWith(fadeOut(animationSpec = spring(stiffness = Spring.StiffnessLow)) + 
+                                       scaleOut(targetScale = 1.08f, animationSpec = spring(stiffness = Spring.StiffnessLow)))
                 },
                 label = "screen_transition"
             ) { screen ->

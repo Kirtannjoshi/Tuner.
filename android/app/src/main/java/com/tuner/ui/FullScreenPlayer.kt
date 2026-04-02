@@ -264,22 +264,35 @@ fun PlayerPage(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = station.name,
-                        color = Color.White,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    var visible by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) { visible = true }
+                    
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(tween(600, delayMillis = 200)) + slideInHorizontally(initialOffsetX = { -40 }, animationSpec = tween(600, delayMillis = 200))
+                    ) {
+                        Text(
+                            text = station.name,
+                            color = Color.White,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = station.tags?.replace(",", " • ")?.uppercase() ?: "LIVE RADIO",
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 16.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(tween(600, delayMillis = 400)) + slideInHorizontally(initialOffsetX = { -30 }, animationSpec = tween(600, delayMillis = 400))
+                    ) {
+                        Text(
+                            text = station.tags?.replace(",", " • ")?.uppercase() ?: "LIVE RADIO",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 16.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
                 
                 val heartScale by animateFloatAsState(
@@ -353,25 +366,33 @@ fun PlayerPage(
                     label = "play_scale_full"
                 )
                 
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .scale(playScale)
-                        .clip(CircleShape)
-                        .background(Color(0xFFEC4899))
-                        .clickable(
-                            interactionSource = playInteraction,
-                            indication = androidx.compose.foundation.LocalIndication.current,
-                            onClick = onPlayPause
-                        )
+                var controlsVisible by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) { controlsVisible = true }
+                
+                AnimatedVisibility(
+                    visible = controlsVisible,
+                    enter = fadeIn(tween(800, delayMillis = 600)) + scaleIn(initialScale = 0.5f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy))
                 ) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) "Pause" else "Play",
-                        tint = Color.White,
-                        modifier = Modifier.size(48.dp)
-                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(80.dp)
+                            .scale(playScale)
+                            .clip(CircleShape)
+                            .background(Color(0xFFEC4899))
+                            .clickable(
+                                interactionSource = playInteraction,
+                                indication = androidx.compose.foundation.LocalIndication.current,
+                                onClick = onPlayPause
+                            )
+                    ) {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = if (isPlaying) "Pause" else "Play",
+                            tint = Color.White,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
                 }
             }
 

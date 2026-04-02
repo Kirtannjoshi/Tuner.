@@ -74,6 +74,7 @@ class RadioService : Service() {
     private var currentFavicon: String? = null
     private var currentTags = "LIVE RADIO"
     private var currentBitmap: Bitmap? = null
+    private var currentNotificationColor: Int = 0xFFEC4899.toInt() // Default Tuner Pink
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -205,8 +206,19 @@ class RadioService : Service() {
                             .build()
                         val result = this@RadioService.imageLoader.execute(request)
                         if (result.drawable is BitmapDrawable) {
-                            currentBitmap = (result.drawable as BitmapDrawable).bitmap
-                            updateNotification(player.isPlaying) // Refresh notification with picture
+                            val bitmap = (result.drawable as BitmapDrawable).bitmap
+                            currentBitmap = bitmap
+                            
+                            // Extract color for the notification
+                            androidx.palette.graphics.Palette.from(bitmap).generate { palette ->
+                                currentNotificationColor = palette?.getVibrantColor(0)
+                                    ?.takeIf { it != 0 }
+                                    ?: palette?.getDominantColor(0)
+                                    ?.takeIf { it != 0 }
+                                    ?: 0xFFEC4899.toInt()
+                                
+                                updateNotification(player.isPlaying)
+                            }
                         }
                     } catch (e: Exception) { /* ignore image fetch failure */ }
                 }
@@ -265,6 +277,8 @@ class RadioService : Service() {
             .setContentText(subtitle)
             .setSmallIcon(R.drawable.ic_notification)
             .setLargeIcon(currentBitmap)
+            .setColor(currentNotificationColor)
+            .setColorized(true)
             .setContentIntent(openApp)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(playing)
