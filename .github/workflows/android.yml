@@ -28,7 +28,10 @@ jobs:
         gradle-version: 8.6
 
     - name: Build Android Debug APK
-      run: ./gradlew -p android assembleDebug -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=1.0.${{ github.run_number }}
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleDebug -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=1.0.${{ github.run_number }}
+      working-directory: android
 
     - name: Extract Version
       id: extract_version

@@ -8,5 +8,9 @@ data class Station(
     val favicon: String?,
     val country: String?,
     val countrycode: String?,
-    val tags: String?
+    val tags: String?,
+    val bitrate: Int?,
+    val codec: String?,
+    val votes: Int?,
+    val language: String?
 )
