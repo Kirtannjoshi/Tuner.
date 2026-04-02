@@ -34,8 +34,7 @@ jobs:
     - name: Extract Version
       id: extract_version
       run: |
-        VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' android/app/build.gradle.kts)
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "VERSION=1.0.${{ github.run_number }}" >> $GITHUB_ENV
 
     - name: Deploy to GitHub Releases (Semantic)
       uses: softprops/action-gh-release@v2
