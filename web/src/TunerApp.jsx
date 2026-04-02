@@ -15,6 +15,18 @@ function AnimatedMesh() {
 }
 
 function HeroBanner() {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = () => {
+    setIsDownloading(true);
+    // Tiny delay to ensure UI updates before browser handles redirect
+    setTimeout(() => {
+      window.location.href = "/download/tuner.apk";
+      // Reset state after a few seconds
+      setTimeout(() => setIsDownloading(false), 4000);
+    }, 150);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -31,21 +43,33 @@ function HeroBanner() {
         <p style={{ color: 'var(--text-secondary)', fontSize: 18, lineHeight: 1.5, marginBottom: 32, maxWidth: 500 }}>
            Experience high-fidelity global radio streaming, redesigned with a sober and minimalist aesthetic. Redefining how you discover sound.
         </p>
-        <motion.a
-          href="https://github.com/Kirtannjoshi/Tuner./releases/latest/download/app-debug.apk"
-          target="_blank" rel="noopener noreferrer"
+        <motion.button
+          onClick={handleDownload}
           whileHover={{ scale: 1.05, boxShadow: '0 12px 40px rgba(236, 72, 153, 0.4)' }}
           whileTap={{ scale: 0.95 }}
+          disabled={isDownloading}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 12, padding: '18px 32px',
-            background: 'var(--accent-primary)', borderRadius: 16, color: '#fff',
-            textDecoration: 'none', fontWeight: 800, fontSize: 17,
-            boxShadow: '0 8px 30px rgba(236, 72, 153, 0.2)'
+            background: isDownloading ? 'var(--bg-surface)' : 'var(--accent-primary)', 
+            borderRadius: 16, color: '#fff',
+            border: 'none', cursor: isDownloading ? 'default' : 'pointer',
+            fontWeight: 800, fontSize: 17,
+            boxShadow: isDownloading ? 'none' : '0 8px 30px rgba(236, 72, 153, 0.2)',
+            transition: 'all 0.3s'
           }}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Download for Android
-        </motion.a>
+          {isDownloading ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+               <div className="spinner" style={{ width: 20, height: 20, borderTopColor: '#fff' }} />
+               <span>Starting Download...</span>
+            </div>
+          ) : (
+            <>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Download for Android
+            </>
+          )}
+        </motion.button>
       </div>
       {/* Visual background element */}
       <div style={{ position: 'absolute', right: -60, bottom: -60, fontSize: 240, rotate: '-15deg', opacity: 0.05, filter: 'blur(2px)' }}>📻</div>
