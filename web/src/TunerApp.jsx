@@ -4,6 +4,55 @@ import Hls from "hls.js";
 import './index.css';
 
 // ── Components ──────────────────────────────────────────────────────────────
+function AnimatedMesh() {
+  return (
+    <div className="mesh-container">
+      <motion.div className="mesh-blob" animate={{ x: [0, 400, 0], y: [0, 200, 0], scale: [1, 1.5, 1] }} transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }} style={{ width: 800, height: 800, left: '-20%', top: '-20%', background: 'var(--accent-primary)', opacity: 0.3 }} />
+      <motion.div className="mesh-blob" animate={{ x: [0, -300, 0], y: [0, 400, 0], scale: [1, 1.2, 1] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }} style={{ width: 600, height: 600, right: '-10%', top: '20%', background: 'var(--accent-tertiary)', opacity: 0.2 }} />
+      <motion.div className="mesh-blob" animate={{ x: [0, 200, 0], y: [0, -300, 0], scale: [1, 1.4, 1] }} transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }} style={{ width: 700, height: 700, left: '30%', bottom: '-20%', background: '#9146FF', opacity: 0.2 }} />
+    </div>
+  );
+}
+
+function HeroBanner() {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+      style={{
+        padding: '60px 40px', borderRadius: 32, 
+        background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-dim)',
+        marginBottom: 48, position: 'relative', overflow: 'hidden'
+      }}
+    >
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 640 }}>
+        <h1 className="font-display hero-gradient" style={{ fontSize: 'min(9vw, 64px)', fontWeight: 900, lineHeight: 1, margin: '0 0 24px', letterSpacing: -2 }}>
+           The World in <br/> Your Pocket.
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 18, lineHeight: 1.5, marginBottom: 32, maxWidth: 500 }}>
+           Experience high-fidelity global radio streaming, redesigned with a sober and minimalist aesthetic. Redefining how you discover sound.
+        </p>
+        <motion.a
+          href="https://github.com/Kirtannjoshi/Tuner./releases/latest/download/app-debug.apk"
+          target="_blank" rel="noopener noreferrer"
+          whileHover={{ scale: 1.05, boxShadow: '0 12px 40px rgba(236, 72, 153, 0.4)' }}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 12, padding: '18px 32px',
+            background: 'var(--accent-primary)', borderRadius: 16, color: '#fff',
+            textDecoration: 'none', fontWeight: 800, fontSize: 17,
+            boxShadow: '0 8px 30px rgba(236, 72, 153, 0.2)'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download for Android
+        </motion.a>
+      </div>
+      {/* Visual background element */}
+      <div style={{ position: 'absolute', right: -60, bottom: -60, fontSize: 240, rotate: '-15deg', opacity: 0.05, filter: 'blur(2px)' }}>📻</div>
+    </motion.div>
+  );
+}
+
 function EqBars({ color = "var(--accent-secondary)", size = 20 }) {
   return (
     <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: size, width: size + 10 }}>
@@ -37,7 +86,7 @@ function StationLogo({ src, name, size = 64, isPlaying = false }) {
       boxShadow: isPlaying ? "0 4px 14px rgba(145, 70, 255, 0.4)" : "0 4px 10px rgba(0,0,0,0.3)",
       borderColor: isPlaying ? "var(--accent-primary)" : "var(--border-light)"
     }} style={{
-      width: size, height: size, borderRadius: "50%", flexShrink: 0, overflow: "hidden",
+      width: size, height: size, borderRadius: size > 40 ? 16 : 10, flexShrink: 0, overflow: "hidden",
       background: `linear-gradient(135deg, hsl(${hue}, 60%, 40%), hsl(${(hue+100)%360}, 60%, 20%))`,
       display: "flex", alignItems: "center", justifyContent: "center",
       border: `2px solid var(--border-light)`,
@@ -171,6 +220,10 @@ export default function TunerApp() {
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem("tuner_favs") || "[]"); } catch { return []; }
   });
+  const [sessionDuration, setSessionDuration] = useState(0);
+  const [ambientImg, setAmbientImg] = useState(null);
+  const [isPlayerOpen, setPlayerOpen] = useState(false);
+  const [isPerformanceMode, setPerformanceMode] = useState(false);
 
   const audioRef = useRef(null);
   const hlsRef = useRef(null);
@@ -207,6 +260,26 @@ export default function TunerApp() {
       audio.removeEventListener("error", errHandler);
     };
   }, []);
+
+  // Session Duration Tracker
+  useEffect(() => {
+    let interval = null;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setSessionDuration(prev => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
+  // Ambient Img Transition
+  useEffect(() => {
+    if (current?.favicon) {
+      setAmbientImg(current.favicon);
+    }
+  }, [current]);
 
   useEffect(() => {
     if (audioRef.current) { audioRef.current.volume = muted ? 0 : volume; }
@@ -343,7 +416,112 @@ export default function TunerApp() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', background: 'var(--bg-base)', overflow: 'hidden' }}>
+      
+      {/* ── INNOVATIVE BACKGROUNDS ── */}
+      {!isPerformanceMode && <AnimatedMesh />}
+      
+      <AnimatePresence mode="wait">
+        {ambientImg && !isPerformanceMode && (
+          <motion.div 
+            key={ambientImg}
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5 }}
+            className="ambient-bg"
+          >
+            <img src={ambientImg} alt="" />
+            <div className="ambient-overlay" style={{ background: isPlayerOpen ? 'radial-gradient(circle at center, transparent 0%, var(--bg-base) 100%)' : 'radial-gradient(circle at center, transparent 0%, var(--bg-base) 85%)' }} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NOW PLAYING OVERLAY (MOBILE-LIKE 70% ALIGNMENT) ── */}
+      <AnimatePresence>
+        {isPlayerOpen && current && (
+          <motion.div 
+            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000, background: 'var(--bg-base)',
+              display: 'flex', flexDirection: 'column', padding: '16px 32px'
+            }}
+          >
+            {/* Ambient Shadow Overlay for immersion */}
+            <div className="ambient-overlay" style={{ opacity: 0.6 }} />
+
+            <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', maxWidth: 460, margin: '0 auto', width: '100%' }}>
+              {/* Header Chevron */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                 <button onClick={() => setPlayerOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 12 }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                 </button>
+              </div>
+
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <motion.div 
+                   className={isPlaying ? "breathing" : ""}
+                   style={{ 
+                     width: '100%', aspectRatio: '1/1', background: 'var(--bg-elevated)', borderRadius: 32, 
+                     overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.5)', marginBottom: 40,
+                     border: '1px solid var(--border-dim)'
+                   }}
+                >
+                   <img src={current.favicon} alt={current.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </motion.div>
+
+                <div style={{ width: '100%', textAlign: 'center', marginBottom: 40 }}>
+                   <h1 className="font-display" style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {current.name}
+                   </h1>
+                   <p style={{ color: 'var(--accent-primary)', fontWeight: 800, fontSize: 13, letterSpacing: 1 }}>
+                     {isPlaying ? "● LIVE STREAMING" : "PAUSED"}
+                   </p>
+                </div>
+
+                {/* Integrated Session Tracker */}
+                <div style={{ width: '100%', marginBottom: 48 }}>
+                   <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginBottom: 12, position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', inset: 0, background: 'var(--accent-primary)', width: `${(sessionDuration % 60) * (100/60)}%`, borderRadius: 2, boxShadow: '0 0 10px var(--accent-primary)' }} />
+                   </div>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600 }}>
+                      <span>{Math.floor(sessionDuration/60)}:{(sessionDuration%60).toString().padStart(2,'0')}</span>
+                      <span>{countryFlag(current.countrycode)} {current.country || "GLOBAL"}</span>
+                   </div>
+                </div>
+
+                {/* Minimalist Big Play Button */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 32, alignItems: 'center' }}>
+                  <button onClick={(e) => toggleFav(current, e)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: isFav(current) ? 'var(--accent-tertiary)' : 'var(--text-secondary)' }}>
+                     <HeartIcon filled={isFav(current)} />
+                  </button>
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      const audio = audioRef.current;
+                      if (!audio) return;
+                      if (isPlaying) { audio.pause(); setIsPlaying(false); }
+                      else { audio.play(); }
+                    }}
+                    style={{
+                      width: 80, height: 80, borderRadius: '50%', background: 'var(--text-primary)', color: 'var(--bg-base)',
+                      border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 12px 30px rgba(255,255,255,0.2)'
+                    }}
+                  >
+                    {isPlaying ? <PauseIcon /> : <PlayIcon />}
+                  </motion.button>
+                  <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                     <NearbyIcon />
+                  </button>
+                </div>
+              </div>
+              <div style={{ height: 60 }} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* ── ABOUT MODAL ── */}
       <AnimatePresence>
@@ -365,14 +543,14 @@ export default function TunerApp() {
               }}
               onClick={e => e.stopPropagation()}
             >
-              <h2 className="font-display" style={{ fontSize: 28, marginBottom: 16 }}>Tuner Hybrid Architecture</h2>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
-                Tuner heavily utilizes a powerful combination of <strong style={{color:"#fff"}}>Microservice API Architecture</strong> mapped against internal <strong style={{color:"#fff"}}>Nano Service Grouping</strong>. This allows us to funnel specialized segments—like Capital FM or BBC networks—seamlessly into ultra-fast pipelines without bloating the main client.
+              <h2 className="font-display" style={{ fontSize: 24, marginBottom: 12 }}>Tuner Architecture</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
+                A high-fidelity streaming engine aggregating over 40,000 global stations for a borderless listening experience. Bridging global cultures through sound.
               </p>
-              <div style={{ background: 'rgba(255,100,100,0.1)', border: '1px solid rgba(255,100,100,0.2)', padding: 16, borderRadius: 12, marginBottom: 24 }}>
+              <div style={{ background: 'rgba(236,72,153,0.05)', border: '1px solid rgba(236,72,153,0.1)', padding: 16, borderRadius: 12, marginBottom: 24 }}>
                 <p style={{ color: 'var(--text-primary)', margin: 0, fontSize: 13, lineHeight: 1.5 }}>
-                  <strong>Disclaimer: No Payment & No Content Ownership</strong><br/>
-                  We emphatically do not host, own, or manage any of the audio content. As a purely free gateway indexer, Tuner leverages absolutely <strong>no native payment integrations</strong> or paywalls. All streams derive publicly via the Radio-Browser directory API.
+                  <strong>Disclaimer</strong><br/>
+                  Tuner leverages the Radio-Browser API to provide a free gateway to public broadcasts. We do not host or own any content.
                 </p>
               </div>
               <motion.button 
@@ -446,30 +624,14 @@ export default function TunerApp() {
           </div>
         )}
 
-        {/* Branding Footer */}
+        {/* Performance & Branding */}
         <div style={{ marginTop: 'auto', paddingTop: 24, paddingLeft: 8, paddingRight: 8, borderTop: '1px solid var(--border-dim)' }}>
-          {/* Android Download CTA */}
-          <motion.a
-            href="https://github.com/Kirtannjoshi/Tuner./releases/latest/download/app-debug.apk"
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.03, boxShadow: '0 8px 24px rgba(236, 72, 153, 0.35)' }}
-            whileTap={{ scale: 0.97 }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-tertiary) 100%)',
-              borderRadius: 10, padding: '10px 14px', marginBottom: 16,
-              textDecoration: 'none', color: '#fff', fontWeight: 700, fontSize: 13,
-              boxShadow: '0 4px 14px rgba(236, 72, 153, 0.25)'
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Get App
-          </motion.a>
+           {/* Performance Mode Toggle */}
+           <div className="performance-toggle" onClick={() => setPerformanceMode(!isPerformanceMode)} style={{ marginBottom: 16 }}>
+              <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: isPerformanceMode ? 'var(--accent-primary)' : 'var(--text-primary)' }}>Performance Mode</div>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: isPerformanceMode ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)' }} />
+           </div>
+
           <p style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 12, fontWeight: 600 }}>© 2026 Tuner</p>
           <div style={{ display: 'flex', gap: 12, fontSize: 10, color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
             <span className="footer-link" onClick={() => setShowAbout(true)} style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>About Tuner</span>
@@ -532,21 +694,6 @@ export default function TunerApp() {
                 ) : <MicIcon />}
               </button>
             </div>
-            
-            <a href="https://github.com/Kirtannjoshi/Tuner./releases/latest/download/app-debug.apk" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  background: 'var(--accent-primary)', border: 'none', color: '#fff',
-                  padding: '10px 18px', borderRadius: 24, fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 14px rgba(236, 72, 153, 0.4)'
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Get App
-              </motion.button>
-            </a>
           </div>
         </header>
 
@@ -559,6 +706,9 @@ export default function TunerApp() {
             style={{ padding: '24px 40px' }}
           >
             
+            {/* Hero Section (Visible on Discover tab main page) */}
+            {tab === "discover" && !query && <HeroBanner />}
+
             {/* Integrated Nano Services directly on Discover page */}
             {tab === "discover" && !query && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 40 }}>
@@ -614,21 +764,37 @@ export default function TunerApp() {
         <motion.div 
           initial={{ y: 100 }} animate={{ y: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="acrylic" style={{
-            position: 'fixed', bottom: 0, left: 'var(--sidebar-width)', right: 0, height: 'var(--player-height)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', zIndex: 100
+            position: 'fixed', bottom: 0, left: 0, right: 0, height: 'var(--player-height)',
+            display: 'flex', flexDirection: 'column', padding: '0 32px', zIndex: 100,
+            borderTop: '1px solid var(--border-dim)'
         }}>
+          {/* Tracker Bar */}
+          <div style={{ width: '100%', position: 'absolute', top: -2, left: 0, right: 0 }}>
+             <div style={{ 
+               height: 2, background: 'var(--accent-primary)', 
+               width: `${(sessionDuration % 60) * (100/60)}%`,
+               transition: 'width 1s linear',
+               boxShadow: '0 0 10px var(--accent-primary)'
+             }} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '100%' }}>
           {/* Track Info */}
-          <div className="player-info-container" style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
+          <div 
+             className="player-info-container" 
+             onClick={() => setPlayerOpen(true)}
+             style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0, cursor: 'pointer' }}
+          >
             <StationLogo src={current.favicon} name={current.name} size={64} isPlaying={isPlaying} />
             <div style={{ minWidth: 0 }}>
               <h4 className="font-display" style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {current.name}
               </h4>
               <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                {isPlaying && !loadingStation && <span style={{ color: 'var(--accent-secondary)', fontWeight: 600, fontSize: 11 }}>● LIVE</span>}
+                {isPlaying && !loadingStation && <span style={{ color: 'var(--accent-primary)', fontWeight: 700, fontSize: 11 }}>● LIVE</span>}
                 {loadingStation && <span style={{ color: 'var(--accent-secondary)', fontSize: 11 }}>Buffering...</span>}
+                {!loadingStation && !errorStatus && <span style={{ fontSize: 12, fontWeight: 600 }}>{Math.floor(sessionDuration/60)}:{(sessionDuration%60).toString().padStart(2,'0')}</span>}
                 {errorStatus && <span style={{ color: 'var(--accent-tertiary)', fontSize: 11 }}>{errorStatus}</span>}
-                {!loadingStation && !errorStatus && <span>{countryFlag(current.countrycode)} {current.country || "Global"}</span>}
               </p>
             </div>
             
@@ -676,6 +842,7 @@ export default function TunerApp() {
             <input type="range" min="0" max="1" step="0.01" value={muted ? 0 : volume} onChange={e => { setVolume(parseFloat(e.target.value)); if(muted) setMuted(false); }} 
               style={{ width: 100 }} />
           </div>
+          </div>
         </motion.div>
       )}
     </div>
@@ -687,8 +854,9 @@ function StationCard({ station: s, isPlaying, isLoading, isFav, onPlay, onFav })
     <motion.div variants={itemVariant} layoutId={s.stationuuid} className="card-hover" onClick={onPlay} style={{
       background: isPlaying ? 'var(--bg-hover)' : 'var(--bg-surface)',
       border: isPlaying ? '1px solid var(--accent-primary)' : '1px solid var(--border-dim)',
-      borderRadius: 16, padding: 18, cursor: 'pointer', position: 'relative', overflow: 'hidden',
-      display: 'flex', flexDirection: 'column', height: '100%'
+      borderRadius: 24, padding: 18, cursor: 'pointer', position: 'relative', overflow: 'hidden',
+      display: 'flex', flexDirection: 'column', height: '100%',
+      boxShadow: isPlaying ? '0 8px 30px rgba(145, 70, 255, 0.15)' : 'none'
     }}>
       {isPlaying && (
         <div style={{

@@ -7,6 +7,6 @@ data class GitHubReleaseResponse(
 )
 
 interface GitHubApi {
-    @GET("repos/Kirtannjoshi/Tuner/releases/latest")
+    @GET("repos/Kirtannjoshi/Tuner./releases/latest")
     suspend fun getLatestRelease(): GitHubReleaseResponse
 }

@@ -246,12 +246,14 @@ fun TunerApp(
     ) {
         currentStation?.let { station ->
             val stationsList by viewModel.stations.collectAsState()
+            val sessionDuration by viewModel.sessionDuration.collectAsState()
             FullScreenPlayer(
                 stations = stationsList,
                 initialStationId = station.stationuuid,
                 isPlaying = isPlaying,
                 favorites = favorites,
                 audioOutput = audioOutput,
+                sessionDuration = sessionDuration,
                 onPlayPause = { viewModel.togglePlayPause() },
                 onToggleFavorite = { uuid -> viewModel.toggleFavorite(uuid) },
                 onMinimize = { isFullScreenPlayerOpen = false },

@@ -19,14 +19,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
 import com.tuner.viewmodel.RadioViewModel
 
 @Composable
 fun SettingsScreen(viewModel: RadioViewModel, onNavigateBack: () -> Unit) {
     val preferredCountries by viewModel.preferredCountry.collectAsState()
     val preferredLanguage by viewModel.preferredLanguage.collectAsState()
+    val updateAvailableUrl by viewModel.updateAvailableUrl.collectAsState()
     val updateStatus by viewModel.updateStatus.collectAsState()
-    val updateUrl by viewModel.updateAvailableUrl.collectAsState()
+    val updateUrl = updateAvailableUrl // Alias for compatibility with rest of the file
+    val isAdminModeEnabled by viewModel.isAdminModeEnabled.collectAsState()
+    val apiLatency by viewModel.apiLatency.collectAsState()
+    var tapCount by remember { mutableIntStateOf(0) }
 
     val countries = listOf("" to "Global", "US" to "United States", "GB" to "United Kingdom", "IN" to "India", "CA" to "Canada", "AU" to "Australia", "DE" to "Germany", "FR" to "France")
     val languages = listOf("" to "Any Language", "english" to "English", "spanish" to "Spanish", "hindi" to "Hindi", "french" to "French", "german" to "German")
@@ -147,6 +152,36 @@ fun SettingsScreen(viewModel: RadioViewModel, onNavigateBack: () -> Unit) {
                 }
             }
 
+            // --- ADMIN / DEVELOPER DASHBOARD ---
+            androidx.compose.animation.AnimatedVisibility(visible = isAdminModeEnabled) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("Developer Dashboard", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEC4899))
+                    
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = Color(0xFF1E1E22),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Memory Heap Usage", color = Color.White, fontSize = 14.sp)
+                                Text(viewModel.getMemoryUsage(), color = Color(0xFFA1A1AA), fontSize = 14.sp)
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Network Latency", color = Color.White, fontSize = 14.sp)
+                                Text("${apiLatency}ms", color = Color(0xFFA1A1AA), fontSize = 14.sp)
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("System Architecture", color = Color.White, fontSize = 14.sp)
+                                Text(android.os.Build.SUPPORTED_ABIS.firstOrNull() ?: "Unknown", color = Color(0xFFA1A1AA), fontSize = 14.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
             // --- ABOUT & VISION ---
             Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 Text("About Tuner", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFA1A1AA))
@@ -156,13 +191,27 @@ fun SettingsScreen(viewModel: RadioViewModel, onNavigateBack: () -> Unit) {
                     color = Color(0xFF1E1E22),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text("What is Tuner?", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "Tuner is a high-fidelity, community-driven radio streaming platform designed to bridge the gap between global cultures through sound. We aggregate over 40,000 stations to bring the world to your pocket.",
-                            color = Color(0xFFA1A1AA), fontSize = 14.sp, lineHeight = 20.sp
-                        )
+                    Row(
+                        modifier = Modifier.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF9146FF).copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("📻", fontSize = 24.sp)
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("What is Tuner?", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                            Text(
+                                "A high-fidelity streaming engine aggregating over 40,000 global stations for a borderless listening experience.",
+                                color = Color(0xFFA1A1AA), fontSize = 13.sp, lineHeight = 18.sp
+                            )
+                        }
                     }
                 }
 
@@ -171,13 +220,27 @@ fun SettingsScreen(viewModel: RadioViewModel, onNavigateBack: () -> Unit) {
                     color = Color(0xFF1E1E22),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text("Our Vision", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "We believe that music and talk radio are the purest forms of human expression. Our vision is to create a borderless listening experience where anyone, anywhere, can discover the heartbeat of a different country with a single tap.",
-                            color = Color(0xFFA1A1AA), fontSize = 14.sp, lineHeight = 20.sp
-                        )
+                    Row(
+                        modifier = Modifier.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFEC4899).copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("🌍", fontSize = 24.sp)
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("The Vision", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                            Text(
+                                "Bridging global cultures through sound. Discover the heartbeat of any country with a single tap.",
+                                color = Color(0xFFA1A1AA), fontSize = 13.sp, lineHeight = 18.sp
+                            )
+                        }
                     }
                 }
 
@@ -195,7 +258,19 @@ fun SettingsScreen(viewModel: RadioViewModel, onNavigateBack: () -> Unit) {
                             Text("Contact Support", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             Text("Email ID coming soon", color = Color(0xFF71717A), fontSize = 12.sp)
                         }
-                        Text("V1.2 BETA", color = Color(0xFF52525B), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "V1.2 BETA", 
+                            color = Color(0xFF52525B), 
+                            fontSize = 12.sp, 
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable {
+                                tapCount++
+                                if (tapCount >= 7) {
+                                    viewModel.toggleAdminMode()
+                                    tapCount = 0
+                                }
+                            }
+                        )
                     }
                 }
             }

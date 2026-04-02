@@ -68,6 +68,24 @@ class RadioViewModel @Inject constructor(
     private val _audioOutput = MutableStateFlow("SPEAKER")
     val audioOutput: StateFlow<String> = _audioOutput.asStateFlow()
 
+    private val _sessionDuration = MutableStateFlow(0L)
+    val sessionDuration: StateFlow<Long> = _sessionDuration.asStateFlow()
+
+    private var durationJob: kotlinx.coroutines.Job? = null
+
+    private fun startDurationTracker() {
+        durationJob?.cancel()
+        _sessionDuration.value = 0L
+        durationJob = viewModelScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(1000)
+                if (isPlaying.value) {
+                    _sessionDuration.value += 1
+                }
+            }
+        }
+    }
+
     private val prefs = context.getSharedPreferences("tuner_prefs", Context.MODE_PRIVATE)
     private val gson = Gson()
     
@@ -79,6 +97,27 @@ class RadioViewModel @Inject constructor(
 
     private val _currentFeed = MutableStateFlow("GLOBAL")
     val currentFeed: StateFlow<String> = _currentFeed.asStateFlow()
+
+    private val _isAdminModeEnabled = MutableStateFlow(false)
+    val isAdminModeEnabled: StateFlow<Boolean> = _isAdminModeEnabled.asStateFlow()
+
+    private val _apiLatency = MutableStateFlow(0L)
+    val apiLatency: StateFlow<Long> = _apiLatency.asStateFlow()
+
+    fun toggleAdminMode() {
+        _isAdminModeEnabled.value = !_isAdminModeEnabled.value
+    }
+
+    fun updateApiLatency(latency: Long) {
+        _apiLatency.value = latency
+    }
+
+    fun getMemoryUsage(): String {
+        val runtime = Runtime.getRuntime()
+        val usedMem = (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024
+        val maxMem = runtime.maxMemory() / 1024 / 1024
+        return "$usedMem MB / $maxMem MB"
+    }
 
     fun setPreferences(countryCode: String, language: String) {
         val currentCountries = _preferredCountry.value.toMutableSet()
@@ -164,7 +203,7 @@ class RadioViewModel @Inject constructor(
                     
                     if (isNewer) {
                         if (isManual) _updateStatus.value = UpdateStatus.AVAILABLE
-                        _updateAvailableUrl.value = "https://github.com/Kirtannjoshi/Tuner/releases/latest/download/app-debug.apk"
+                        _updateAvailableUrl.value = "https://github.com/Kirtannjoshi/Tuner./releases/latest/download/app-debug.apk"
                     } else {
                         if (isManual) _updateStatus.value = UpdateStatus.UP_TO_DATE
                     }
@@ -295,6 +334,7 @@ class RadioViewModel @Inject constructor(
             return false
         }
         _currentStation.value = station
+        startDurationTracker()
         // Playback is started by MainActivity via startForegroundService with Activity context
         return true
     }

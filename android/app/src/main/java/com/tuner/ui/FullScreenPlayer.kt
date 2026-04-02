@@ -4,6 +4,10 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -32,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.graphicsLayer
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.tuner.model.Station
@@ -52,19 +57,24 @@ fun rememberDominantColor(imageUrl: String?): State<Color> {
         val request = coil.request.ImageRequest.Builder(context)
             .data(imageUrl)
             .allowHardware(false) // Necessary to get underlying pixels
-            .size(coil.size.Size.ORIGINAL) // Force high quality extraction
+            .size(128, 128) // Small size for faster color extraction
             .build()
         
-        // Execute request synchronously via io
         withContext(kotlinx.coroutines.Dispatchers.IO) {
             val result = context.imageLoader.execute(request)
             if (result is coil.request.SuccessResult) {
                 val bitmap = result.drawable.toBitmap()
                 Palette.from(bitmap).generate { palette ->
-                    val vibrant = palette?.getDarkVibrantColor(0xFF121212.toInt())
-                        ?: palette?.getMutedColor(0xFF121212.toInt())
+                    // Favor vibrant colors for a "premium" ambient feel
+                    val selectedColor = palette?.getVibrantColor(0)
+                        ?.takeIf { it != 0 }
+                        ?: palette?.getLightVibrantColor(0)
+                        ?.takeIf { it != 0 }
+                        ?: palette?.getDominantColor(0)
+                        ?.takeIf { it != 0 }
                         ?: 0xFF121212.toInt()
-                    color.value = Color(vibrant)
+                    
+                    color.value = Color(selectedColor)
                 }
             }
         }
@@ -80,6 +90,7 @@ fun FullScreenPlayer(
     isPlaying: Boolean,
     favorites: Set<String>,
     audioOutput: String = "SPEAKER",
+    sessionDuration: Long = 0L,
     onPlayPause: () -> Unit,
     onToggleFavorite: (String) -> Unit,
     onMinimize: () -> Unit,
@@ -113,6 +124,7 @@ fun FullScreenPlayer(
             isPlaying = isCurrentPlaying,
             isFavorite = favorites.contains(pageStation.stationuuid),
             audioOutput = audioOutput,
+            sessionDuration = sessionDuration,
             onPlayPause = onPlayPause,
             onToggleFavorite = { onToggleFavorite(pageStation.stationuuid) },
             onMinimize = onMinimize
@@ -126,6 +138,7 @@ fun PlayerPage(
     isPlaying: Boolean,
     isFavorite: Boolean,
     audioOutput: String = "SPEAKER",
+    sessionDuration: Long = 0L,
     onPlayPause: () -> Unit,
     onToggleFavorite: () -> Unit,
     onMinimize: () -> Unit
@@ -193,32 +206,53 @@ fun PlayerPage(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Giant Cover Art - Tomb Scrolling immersion
             val artScale by animateFloatAsState(
-                targetValue = if (isPlaying) 1f else 0.85f,
+                targetValue = if (isPlaying) 1f else 0.88f,
                 animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
                 label = "art_scale"
             )
 
-            Box(
+            // Minimalist Square Cover Art - Sober & Delicate
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(0.8f) // Even taller to mimic Tiktok video aspect
-                    .scale(artScale)
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(Color(0xFF27272A)),
-                contentAlignment = Alignment.Center
+                    .aspectRatio(1f) 
+                    .scale(artScale),
+                shape = RoundedCornerShape(32.dp),
+                color = Color(0xFF18181B),
+                shadowElevation = 20.dp
             ) {
-                coil.compose.AsyncImage(
-                    model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
-                        .data(station.favicon)
-                        .crossfade(true)
-                        .size(coil.size.Size.ORIGINAL) // Enforce High Quality
-                        .build(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    // Glow behind the art
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(0.9f)
+                            .blur(40.dp)
+                            .background(bgColor.copy(alpha = 0.2f))
+                    )
+
+                    coil.compose.AsyncImage(
+                        model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                            .data(station.favicon)
+                            .crossfade(true)
+                            .size(coil.size.Size.ORIGINAL)
+                            .build(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    // Subtle delicate overlay
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    listOf(Color.Transparent, Color.Black.copy(alpha = 0.4f))
+                                )
+                            )
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(64.dp))
@@ -266,6 +300,44 @@ fun PlayerPage(
             }
 
             Spacer(modifier = Modifier.height(48.dp))
+
+            // Tracker Bar (Session Duration)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                val progress = (sessionDuration % 60) / 60f
+                val minutes = sessionDuration / 60
+                val seconds = sessionDuration % 60
+                
+                Slider(
+                    value = progress,
+                    onValueChange = {},
+                    enabled = false,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        disabledThumbColor = Color.White,
+                        disabledActiveTrackColor = Color.White,
+                        disabledInactiveTrackColor = Color.White.copy(alpha = 0.2f)
+                    )
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = String.format("%02d:%02d", minutes, seconds),
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = "LIVE",
+                        color = Color(0xFFEC4899),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Playback Controls
             Row(
