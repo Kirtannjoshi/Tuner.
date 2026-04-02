@@ -1,11 +1,14 @@
 {
   "hosting": {
     "site": "radiowave-7xxi7",
-    "public": "dist",
+    "public": "web/dist",
     "ignore": [
-      "firebase.json",
+      ".firebase/**",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "android/**",
+      "backend/**",
+      "firebase.json"
     ],
     "rewrites": [
       {
