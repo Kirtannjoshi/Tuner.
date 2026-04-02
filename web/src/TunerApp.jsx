@@ -16,14 +16,17 @@ function AnimatedMesh() {
 
 function HeroBanner() {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const handleDownload = () => {
     setIsDownloading(true);
-    // Tiny delay to ensure UI updates before browser handles redirect
     setTimeout(() => {
       window.location.href = "/download/tuner.apk";
-      // Reset state after a few seconds
-      setTimeout(() => setIsDownloading(false), 4000);
+      setTimeout(() => {
+        setIsDownloading(false);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 5000);
+      }, 3000);
     }, 150);
   };
 
@@ -36,6 +39,21 @@ function HeroBanner() {
         marginBottom: 48, position: 'relative', overflow: 'hidden'
       }}
     >
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            style={{
+              position: 'absolute', top: 20, left: '50%', x: '-50%', zIndex: 10,
+              background: 'var(--accent-primary)', color: '#fff', padding: '12px 24px',
+              borderRadius: 40, fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap',
+              boxShadow: '0 10px 30px rgba(236, 72, 153, 0.4)'
+            }}
+          >
+            🚀 Update Download Started!
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 640 }}>
         <h1 className="font-display hero-gradient" style={{ fontSize: 'min(9vw, 64px)', fontWeight: 900, lineHeight: 1, margin: '0 0 24px', letterSpacing: -2 }}>
            The World in <br/> Your Pocket.
