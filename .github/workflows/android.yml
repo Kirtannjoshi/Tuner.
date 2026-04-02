@@ -43,3 +43,19 @@ jobs:
         name: "Tuner v${{ env.VERSION }}"
         make_latest: true
         files: android/app/build/outputs/apk/debug/app-debug.apk
+
+    - name: Prepare APK for Direct Hosting
+      run: |
+        mkdir -p web/public/download
+        cp android/app/build/outputs/apk/debug/app-debug.apk web/public/download/tuner.apk
+
+    - name: Mirror APK to Firebase Hosting (Direct Download)
+      uses: FirebaseExtended/action-hosting-deploy@v0
+      with:
+        repoToken: '${{ secrets.GITHUB_TOKEN }}'
+        firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_RADIOWAVE_7XXI7 }}'
+        channelId: live
+        projectId: radiowave-7xxi7
+        entryPoint: ./web
+
+
