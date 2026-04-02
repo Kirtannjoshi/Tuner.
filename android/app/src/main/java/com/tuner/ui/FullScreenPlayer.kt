@@ -439,7 +439,11 @@ fun PlayerPage(
             }
             
             Spacer(modifier = Modifier.height(48.dp))
-       @OptIn(ExperimentalMaterial3Api::class)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StationDetailSheet(station: Station, onDismiss: () -> Unit) {
     ModalBottomSheet(
